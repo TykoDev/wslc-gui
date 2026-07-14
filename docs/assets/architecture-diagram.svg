@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" width="1000" height="760" font-family="Segoe UI, system-ui, sans-serif">
+  <title>wslc-gui process topology</title>
+  <desc>Single compiled executable with a blocked main thread owning the WebView2 window, an HTTP server in a Worker, a tray Worker, and transient dialog Workers. All child processes funnel through one exec() choke point.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowDanger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+    <style>
+      .lbl   { font-size: 12px; fill: #475569; }
+      .lblb  { font-size: 12px; fill: #475569; font-weight: 600; }
+      .h     { font-size: 14px; font-weight: 700; }
+      .sub   { font-size: 11.5px; }
+      .mono  { font-family: Cascadia Mono, Consolas, monospace; font-size: 11.5px; }
+      .monob { font-family: Cascadia Mono, Consolas, monospace; font-size: 12px; font-weight: 700; }
+      .note  { font-size: 11px; fill: #64748b; font-style: italic; }
+      @media (prefers-color-scheme: dark) {
+        .lbl, .lblb { fill: #94a3b8; }
+        .note { fill: #94a3b8; }
+      }
+    </style>
+  </defs>
+
+  <!-- exe boundary -->
+  <rect x="20" y="52" width="620" height="560" rx="10" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="34" y="44" class="monob" fill="#334155">wslc-gui.exe</text>
+  <text x="150" y="44" class="note">deno compile &#183; x86_64-pc-windows-msvc &#183; --no-terminal</text>
+
+  <!-- MAIN THREAD -->
+  <rect x="44" y="80" width="270" height="238" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="60" y="104" class="h" fill="#1d4ed8">MAIN THREAD</text>
+  <text x="60" y="122" class="mono" fill="#1e40af">main.ts</text>
+  <line x1="60" y1="132" x2="298" y2="132" stroke="#bfdbfe"/>
+  <text x="60" y="152" class="sub" fill="#1e3a5f">1. AllocConsole + ShowWindow(SW_HIDE)</text>
+  <text x="60" y="170" class="sub" fill="#1e3a5f">2. generateToken() &#8212; 256 bits</text>
+  <text x="60" y="188" class="sub" fill="#1e3a5f">3. spawn server Worker, await port</text>
+  <text x="60" y="206" class="sub" fill="#1e3a5f">4. Webview 1280&#215;800 &#8594; navigate</text>
+  <text x="60" y="224" class="sub" fill="#1e3a5f">5. spawn tray Worker (hands it the HWND)</text>
+  <rect x="58" y="234" width="242" height="26" rx="4" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="66" y="252" class="mono" fill="#991b1b">6. webview.run() &#8212; BLOCKS the loop</text>
+  <text x="60" y="280" class="sub" fill="#1e3a5f">7. window closed &#8594; terminate workers</text>
+  <text x="60" y="298" class="sub" fill="#1e3a5f">&#160;&#160;&#160;&#160;&#8594; Deno.exit(0)</text>
+
+  <!-- SERVER WORKER -->
+  <rect x="44" y="342" width="270" height="152" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="60" y="366" class="h" fill="#15803d">SERVER WORKER</text>
+  <text x="60" y="384" class="mono" fill="#166534">server/worker.ts</text>
+  <line x1="60" y1="394" x2="298" y2="394" stroke="#bbf7d0"/>
+  <text x="60" y="414" class="mono" fill="#14532d">Deno.serve(127.0.0.1:0)</text>
+  <text x="60" y="434" class="sub" fill="#14532d">&#183; static SPA (embedded in the exe)</text>
+  <text x="60" y="452" class="sub" fill="#14532d">&#183; /api/* &#8212; token + origin + JSON gates</text>
+  <text x="60" y="470" class="sub" fill="#14532d">&#183; /api/events &#8212; SSE hub, 5 channels</text>
+  <text x="60" y="488" class="note">own event loop &#8212; unaffected by the blocked main</text>
+
+  <!-- TRAY WORKER -->
+  <rect x="348" y="342" width="270" height="72" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="364" y="366" class="h" fill="#a16207">TRAY WORKER</text>
+  <text x="364" y="384" class="mono" fill="#854d0e">tray/tray_worker.ts</text>
+  <text x="364" y="403" class="sub" fill="#713f12">own Win32 message pump &#183; minimize-to-tray</text>
+
+  <!-- DIALOG WORKER -->
+  <rect x="348" y="430" width="270" height="80" rx="8" fill="#faf5ff" stroke="#9333ea" stroke-width="1.5"/>
+  <text x="364" y="454" class="h" fill="#7e22ce">DIALOG WORKER</text>
+  <text x="364" y="472" class="mono" fill="#6b21a8">system/dialog_worker.ts</text>
+  <text x="364" y="491" class="sub" fill="#581c87">native file/folder pickers &#8212; they BLOCK,</text>
+  <text x="364" y="505" class="sub" fill="#581c87">so they get a transient thread of their own</text>
+
+  <!-- adapter choke point -->
+  <rect x="44" y="518" width="574" height="76" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+  <text x="60" y="542" class="h" fill="#b91c1c">adapter/exec.ts &#8212; THE ONLY SPAWN SITE</text>
+  <text x="60" y="562" class="sub" fill="#7f1d1d">binary allowlist &#183; args arrays, never a shell &#183; leading-dash rejected</text>
+  <text x="60" y="580" class="sub" fill="#7f1d1d">WSL_UTF8=1 always &#183; timeout + kill always &#183; stderr passed through verbatim</text>
+
+  <!-- WebView2 window -->
+  <rect x="690" y="80" width="280" height="200" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+  <text x="706" y="104" class="h" fill="#334155">WebView2 WINDOW</text>
+  <text x="706" y="122" class="mono" fill="#475569">React 19 &#183; Vite 7 &#183; react-router</text>
+  <line x1="706" y1="132" x2="954" y2="132" stroke="#e2e8f0"/>
+  <text x="706" y="152" class="sub" fill="#334155">Containers &#183; Images &#183; Resources</text>
+  <text x="706" y="170" class="sub" fill="#334155">Deploy &#183; Settings</text>
+  <text x="706" y="196" class="sub" fill="#334155">initToken(): read #t=&#8230; from the</text>
+  <text x="706" y="212" class="sub" fill="#334155">fragment, stash it, strip the URL</text>
+  <text x="706" y="238" class="note">fragments are never sent to a server</text>
+  <text x="706" y="254" class="note">and never reach a request log</text>
+  <text x="706" y="272" class="note">&#8212; that is why the token rides one</text>
+
+  <!-- child processes -->
+  <rect x="690" y="430" width="280" height="164" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="706" y="454" class="h" fill="#c2410c">CHILD PROCESSES</text>
+  <text x="706" y="472" class="note">system-changing &#183; some irreversible</text>
+  <line x1="706" y1="482" x2="954" y2="482" stroke="#fed7aa"/>
+  <text x="706" y="504" class="mono" fill="#9a3412">wsl.exe</text>
+  <text x="800" y="504" class="sub" fill="#7c2d12">distros, VM, mounts</text>
+  <text x="706" y="526" class="mono" fill="#9a3412">wslc.exe</text>
+  <text x="800" y="526" class="sub" fill="#7c2d12">containers, images</text>
+  <text x="706" y="548" class="mono" fill="#9a3412">reg.exe</text>
+  <text x="800" y="548" class="sub" fill="#7c2d12">Lxss &#8594; ext4.vhdx</text>
+  <text x="706" y="570" class="mono" fill="#9a3412">explorer.exe</text>
+  <text x="800" y="570" class="sub" fill="#7c2d12">reveal, open</text>
+  <text x="706" y="588" class="note">mirrored by compile-time --allow-run</text>
+
+  <!-- arrows -->
+  <!-- main -> server -->
+  <path d="M 179 318 L 179 342" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="188" y="335" class="lbl">postMessage {token, port} &#8594; &#8592; {ready, port}</text>
+
+  <!-- main -> tray -->
+  <path d="M 314 250 L 483 250 L 483 342" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="330" y="243" class="lbl">{hwnd, iconPath}</text>
+
+  <!-- server -> dialog -->
+  <path d="M 314 462 L 348 462" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+  <text x="300" y="530" class="note" text-anchor="middle"></text>
+
+  <!-- main -> webview -->
+  <path d="M 314 160 L 690 160" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="500" y="152" class="lblb" text-anchor="middle" fill="#1d4ed8">navigate</text>
+  <text x="500" y="180" class="mono" text-anchor="middle" fill="#1d4ed8">http://127.0.0.1:PORT/#t=TOKEN</text>
+
+  <!-- webview -> server -->
+  <path d="M 800 280 L 800 320 L 330 320 L 330 400 L 314 400" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <text x="640" y="313" class="lblb" text-anchor="middle" fill="#15803d">fetch /api &#183; EventSource &#8212; Authorization: Bearer</text>
+
+  <!-- server -> exec -->
+  <path d="M 179 494 L 179 518" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- exec -> children -->
+  <path d="M 618 556 L 690 512" stroke="#dc2626" stroke-width="2" fill="none" marker-end="url(#arrowDanger)"/>
+
+  <!-- tray -> children (wsl --shutdown) -->
+  <path d="M 618 378 L 660 378 L 660 470 L 690 470" stroke="#ca8a04" stroke-width="1.5" fill="none" marker-end="url(#arrow)" stroke-dasharray="4 3"/>
+  <text x="668" y="370" class="note">Stop / Restart WSL</text>
+
+  <!-- attacker note -->
+  <rect x="690" y="300" width="280" height="106" rx="8" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="706" y="324" class="lblb" fill="#b91c1c">THE REAL ATTACK SURFACE</text>
+  <text x="706" y="344" class="sub" fill="#7f1d1d">Any local process &#8212; and any website in</text>
+  <text x="706" y="360" class="sub" fill="#7f1d1d">any local browser &#8212; can attempt HTTP</text>
+  <text x="706" y="376" class="sub" fill="#7f1d1d">to 127.0.0.1:PORT.</text>
+  <text x="706" y="396" class="sub" fill="#7f1d1d">Bind &#183; token &#183; origin &#183; JSON gates.</text>
+  <path d="M 830 406 L 830 424 L 500 424 L 500 440" stroke="#dc2626" stroke-width="1.5" fill="none" stroke-dasharray="4 3" opacity="0.5"/>
+
+  <!-- footer -->
+  <text x="20" y="640" class="lblb">Why the server is in a Worker:</text>
+  <text x="20" y="660" class="lbl">webview.run() blocks the main JavaScript event loop &#8212; only FFI callbacks fire. An HTTP server on the main thread would starve the moment</text>
+  <text x="20" y="678" class="lbl">the window opened. A Worker has its own event loop, so it keeps serving. (In --headless mode there is no webview, so the server runs on</text>
+  <text x="20" y="696" class="lbl">the main thread instead &#8212; a Worker alone does not keep Deno's event loop alive, but Deno.serve does.)</text>
+  <text x="20" y="726" class="lbl">Each Worker needs an explicit --include at compile time. deno compile does not embed them automatically, and there is no build-time error if you forget.</text>
+  <text x="20" y="748" class="note">docs/concepts/architectural-overview.md</text>
+</svg>

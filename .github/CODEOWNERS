@@ -1,0 +1,56 @@
+# CODEOWNERS — who gets automatically requested for review.
+#
+# Syntax: https://docs.github.com/articles/about-code-owners
+# The LAST matching pattern wins, so the specific rules below override the catch-all.
+
+# ---------------------------------------------------------------- default
+# Everything, unless a more specific rule below claims it.
+*                               @TykoDev
+
+# ---------------------------------------------------------------- security-critical
+# Changes here need a careful read. Each of these is load-bearing for a promise the app
+# makes, and the reasoning lives in docs/concepts/security-model.md.
+
+# The ONLY place a child process is spawned. Binary allowlist, args arrays, no shell.
+/app/adapter/exec.ts            @TykoDev
+
+# Every input validator — including the leading-dash rule that stops flag injection.
+/app/adapter/validate.ts        @TykoDev
+
+# Token (constant-time), origin allowlist, JSON content-type gate.
+/app/server/auth.ts             @TykoDev
+
+# The route table: capability gates, the confirmName/confirm echoes, stderr passthrough.
+/app/server/routes.ts           @TykoDev
+
+# The one file-read endpoint: extension allowlist, symlink reject, double size check.
+/app/server/read_text.ts        @TykoDev
+
+# Outbound registry calls — the link-local SSRF block and the response cap.
+/app/server/registry_tags.ts    @TykoDev
+
+# Static serving: the in-memory map that makes traversal impossible, and the CSP.
+/app/server/static.ts           @TykoDev
+
+# Backup-then-atomic-replace of the user's .wslconfig, and the documented key catalog.
+/app/adapter/wslconfig.ts       @TykoDev
+
+# ---------------------------------------------------------------- build contract
+# deno.json holds the compile flags: --allow-run must mirror the exec.ts allowlist exactly,
+# and --allow-env is an allowlist. A change here can silently widen the sandbox.
+/app/deno.json                  @TykoDev
+/app/deno.lock                  @TykoDev
+
+# Win32 FFI. Includes the hidden-console fix, without which the app flashes a console
+# window every polling tick.
+/app/main.ts                    @TykoDev
+/app/system/                    @TykoDev
+/app/tray/                      @TykoDev
+
+# CI: the five-step gate. Both typechecks must stay in it.
+/.github/workflows/             @TykoDev
+
+# ---------------------------------------------------------------- docs
+/docs/                          @TykoDev
+/AGENTS.md                      @TykoDev
+/SECURITY.md                    @TykoDev

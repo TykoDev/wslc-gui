@@ -1,0 +1,415 @@
+@import "./tokens.css";
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+}
+code, pre, .mono { font-family: var(--font-mono); font-size: 12.5px; }
+a { color: var(--accent); }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+
+/* Visible to a screen reader, not to the eye. A colored chip is styling, not information:
+   the `anonymous` badge needs a word that says what the colour means. */
+.sronly {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------- shell ---------- */
+.shell { display: grid; grid-template-columns: var(--sidebar-w) 1fr; grid-template-rows: var(--topbar-h) 1fr; height: 100%; }
+.sidebar {
+  grid-row: 1 / 3; background: var(--bg-raised); border-right: 1px solid var(--card-border);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; padding: var(--gap-3) 0; z-index: 1;
+}
+.sidebar .brand {
+  display: flex; align-items: center; gap: var(--gap-2);
+  font-weight: 650; font-size: 14px; padding: var(--gap-2) var(--gap-4) var(--gap-4);
+}
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; padding: 0 var(--gap-2); }
+.sidebar nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; color: var(--text-muted); text-decoration: none;
+  border-radius: var(--radius-sm); font-weight: 500; font-size: 13.5px;
+}
+.sidebar nav a svg { flex-shrink: 0; }
+.sidebar nav a:hover { background: var(--bg-inset); color: var(--text); }
+.sidebar nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.sidebar .foot { margin-top: auto; padding: var(--gap-2) var(--gap-4); color: var(--text-muted); font-size: 11.5px; }
+
+.topbar {
+  display: flex; align-items: center; gap: var(--gap-2); padding: 0 var(--gap-4);
+  background: var(--bg-raised); border-bottom: 1px solid var(--card-border); box-shadow: var(--shadow-sm);
+}
+.topbar h1 { font-size: 14px; font-weight: 650; margin: 0; }
+.topbar .spacer { flex: 1; }
+
+.content { overflow-y: auto; overflow-x: hidden; padding: var(--gap-4) var(--gap-6) var(--gap-6); }
+.page { width: 100%; max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--gap-3); min-width: 0; }
+.page > h2 { margin: 4px 0 2px; font-size: 17px; letter-spacing: -0.01em; }
+.pagehead { display: flex; align-items: center; gap: var(--gap-2); margin: 4px 0 2px; }
+.pagehead h2 { margin: 0; font-size: 17px; letter-spacing: -0.01em; }
+.pagehead .spacer { flex: 1; }
+@media (max-width: 900px) {
+  .content { padding: var(--gap-3); }
+}
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 56px 1fr; }
+  .sidebar .brand span, .sidebar nav a span, .sidebar .foot { display: none; }
+  .sidebar nav a { justify-content: center; padding: 8px; }
+}
+
+/* ---------- pills / badges ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+  border-radius: 999px; background: var(--bg-inset);
+  font-size: 11.5px; font-weight: 500; color: var(--text-muted); white-space: nowrap;
+}
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+.pill.ok { color: var(--ok); background: var(--ok-soft); }
+.pill.ok::before { background: var(--ok); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); }
+.pill.warn::before { background: var(--warn); }
+.pill.bad { color: var(--danger); background: var(--danger-soft); }
+.pill.bad::before { background: var(--danger); }
+.badge {
+  font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 999px;
+  background: var(--bg-inset); color: var(--text-muted); vertical-align: middle; white-space: nowrap;
+}
+.badge.warn { color: var(--warn); background: var(--warn-soft); }
+
+/* ---------- stat tiles (KPI band) ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: var(--gap-3); }
+.stat {
+  background: var(--bg-raised); border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); padding: 10px 14px 11px;
+  display: flex; flex-direction: column; gap: 1px; min-width: 0;
+}
+.stat .label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.stat .label .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+.stat .label .dot.ok { background: var(--ok); }
+.stat .label .dot.warn { background: var(--warn); }
+.stat .label .dot.bad { background: var(--danger); }
+.stat .value { font-size: 21px; font-weight: 650; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat .value small { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-left: 2px; }
+.stat .meta { font-size: 11.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- cards / tables ---------- */
+.card {
+  background: var(--bg-raised); border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.card > header {
+  display: flex; align-items: center; gap: var(--gap-2); padding: 10px var(--gap-4);
+  font-weight: 600; font-size: 13px; min-height: 44px;
+  /* Headers carry action buttons (Storage: Mount/Unmount/Shutdown). They wrap instead
+     of pushing the card wider than the viewport at 480px. */
+  flex-wrap: wrap;
+}
+.card > header .spacer { flex: 1; }
+/* Separates a destructive header action from the benign ones next to it. */
+.card > header .hdrsep { width: 1px; align-self: stretch; margin: 5px 2px; background: var(--hairline); }
+@media (max-width: 760px) {
+  .card > header .hdrsep { display: none; }
+}
+.card .body { padding: var(--gap-4); }
+.card > header + .body { padding-top: 2px; }
+.tablewrap { min-width: 0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: var(--gap-2) var(--gap-4); vertical-align: middle; overflow-wrap: anywhere; }
+th { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--hairline); padding-block: 6px 8px; }
+td { border-bottom: 1px solid var(--hairline); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg-inset); }
+td .rowactions { display: flex; gap: var(--gap-1); flex-wrap: wrap; align-items: center; }
+td .rowactions button.icon { color: var(--text); }
+td.actions { text-align: right; white-space: nowrap; width: 1%; }
+td.actions .rowactions { justify-content: flex-end; flex-wrap: nowrap; }
+th.actions { text-align: right; }
+
+/* Stacked-card table transformation on narrow windows: no horizontal scroll,
+   each row becomes a labeled block (labels come from td[data-label]). */
+@media (max-width: 760px) {
+  table.responsive thead { display: none; }
+  table.responsive, table.responsive tbody, table.responsive tr, table.responsive td { display: block; width: 100%; }
+  table.responsive tr { border: 1px solid var(--hairline); border-radius: var(--radius); margin: var(--gap-2); padding: var(--gap-1) 0; width: auto; }
+  table.responsive td { border-bottom: none; display: flex; gap: var(--gap-3); align-items: baseline; }
+  table.responsive td.actions { text-align: left; width: auto; }
+  table.responsive td.actions .rowactions { justify-content: flex-start; }
+  table.responsive td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 92px;
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  table.responsive td:empty { display: none; }
+}
+
+/* ---------- buttons / inputs ---------- */
+button {
+  font: inherit; font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: var(--radius-sm); border: none;
+  background: var(--bg-inset); color: var(--text);
+  min-height: var(--ctl-h); padding: 4px 13px; cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+button svg { flex-shrink: 0; }
+button:hover:not(:disabled) { background: var(--bg-hover); }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-contrast); font-weight: 600; box-shadow: var(--shadow-sm); }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+button.danger { background: var(--danger-soft); color: var(--danger); }
+button.danger:hover:not(:disabled) { background: var(--danger); color: var(--danger-contrast); }
+button.small { min-height: var(--ctl-h-sm); padding: 2px 9px; font-size: 12.5px; }
+button.ghost { background: transparent; }
+button.ghost:hover:not(:disabled) { background: var(--bg-inset); }
+button.icon { width: var(--ctl-h); padding: 0; background: transparent; color: var(--text-muted); }
+button.icon:hover:not(:disabled) { background: var(--bg-inset); color: var(--text); }
+button.icon.small { width: var(--ctl-h-sm); min-height: var(--ctl-h-sm); }
+
+input[type="text"], input[type="number"], select, textarea {
+  font: inherit; font-size: 13px; color: var(--text); background: var(--bg-inset);
+  border: 1px solid transparent; border-radius: var(--radius-sm); padding: 5px 10px;
+  min-height: var(--ctl-h); transition: border-color 0.1s ease, background-color 0.1s ease;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--focus); background: var(--bg-raised);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 15px; height: 15px; }
+input:disabled, select:disabled, textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+textarea.mono, pre.mono { font-family: var(--font-mono); }
+/* Class-, not element-scoped: a compound control (SizeInput = number + unit select) must
+   not sit inside a <label>, which may only name one control. Those wrappers are <span>. */
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.field > span.req::after { content: " *"; color: var(--danger); }
+/* Helper line under a control (r9): carries the semantics a label has no room for —
+   e.g. that --entrypoint REPLACES the image entrypoint and Command becomes its args.
+   Wraps rather than truncating; `.bad` is the invalid-input variant. */
+.fieldhint { font-size: 11px; font-weight: 400; line-height: 1.35; color: var(--text-muted); }
+.fieldhint.bad { color: var(--danger); }
+.formrow { display: flex; gap: var(--gap-3); flex-wrap: wrap; align-items: flex-end; }
+.checkline { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 400; color: var(--text); white-space: nowrap; }
+
+fieldset { border: 1px solid var(--hairline); border-radius: var(--radius); }
+
+/* Advanced-options disclosure (Deploy quick run) */
+details.adv > summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text-muted); user-select: none; width: fit-content; }
+details.adv > summary:hover { color: var(--text); }
+details.adv[open] > summary { margin-bottom: var(--gap-3); }
+.advgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--gap-3); }
+
+/* Fetched-tags list (Pull dialog) */
+.taglist { display: flex; flex-direction: column; gap: 1px; max-height: 240px; overflow-y: auto; background: var(--bg-inset); border-radius: var(--radius); padding: 4px; }
+.taglist button { justify-content: space-between; background: transparent; min-height: 28px; font-size: 12.5px; border-radius: var(--radius-sm); }
+.taglist button:hover:not(:disabled) { background: var(--bg-hover); }
+.taglist button .when { color: var(--text-muted); font-size: 11px; font-weight: 400; }
+.taglist button.sel { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.taglist button.sel .when { color: var(--accent); }
+
+/* Segmented control (tab switchers) */
+.seg { display: inline-flex; align-self: flex-start; background: var(--bg-inset); border-radius: var(--radius); padding: 3px; gap: 2px; }
+.seg button { background: transparent; color: var(--text-muted); min-height: 26px; padding: 2px 14px; border-radius: var(--radius-sm); font-size: 13px; }
+.seg button:hover:not(:disabled) { background: transparent; color: var(--text); }
+.seg button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.seg.small button { min-height: 22px; padding: 1px 10px; font-size: 12px; }
+
+/* ---------- dropdown action menu ---------- */
+.menu {
+  position: fixed; z-index: 70; min-width: 190px; max-width: 280px;
+  background: var(--bg-raised); border: 1px solid var(--card-border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); padding: 4px;
+}
+.menu .mi {
+  display: flex; width: 100%; align-items: center; gap: 9px; text-align: left; justify-content: flex-start;
+  padding: 6px 10px; min-height: 30px; background: transparent; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 400; color: var(--text);
+}
+.menu .mi svg { color: var(--text-muted); }
+.menu .mi:hover:not(:disabled), .menu .mi:focus-visible { background: var(--bg-inset); outline: none; }
+.menu .mi.danger { color: var(--danger); }
+.menu .mi.danger svg { color: var(--danger); }
+.menu .mi.danger:hover:not(:disabled), .menu .mi.danger:focus-visible { background: var(--danger-soft); }
+.menu .msep { height: 1px; background: var(--hairline); margin: 4px 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .menu { animation: menu-in 0.12s ease-out; }
+  @keyframes menu-in { from { opacity: 0; transform: translateY(-3px); } }
+}
+
+/* ---------- states ---------- */
+.empty { text-align: center; padding: 36px 16px; color: var(--text-muted); }
+.empty h3 { color: var(--text); margin: 0 0 4px; font-size: 14.5px; }
+.empty p { margin: 0 0 12px; font-size: 13px; }
+.errorbanner {
+  border-left: 3px solid var(--danger); border-radius: var(--radius);
+  padding: var(--gap-3) var(--gap-4);
+  background: var(--danger-soft); display: flex; flex-direction: column; gap: 6px;
+}
+.errorbanner.okbanner { border-left-color: var(--ok); background: var(--ok-soft); }
+.hero { text-align: center; padding: 48px 24px; }
+.hero h3 { font-size: 16px; margin: 0 0 8px; }
+.hero p { color: var(--text-muted); max-width: 520px; margin: 0 auto 8px; }
+.hero .actions { display: flex; gap: var(--gap-2); justify-content: center; margin-top: var(--gap-3); }
+.skeleton { display: block; height: 14px; border-radius: 4px; background: linear-gradient(90deg, var(--bg-inset) 25%, var(--border) 50%, var(--bg-inset) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* ---------- toasts ---------- */
+.toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 80; max-width: 380px; }
+.toast {
+  background: var(--bg-raised); border: 1px solid var(--card-border); border-left: 3px solid var(--text-muted);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 10px 14px; font-size: 13px;
+}
+.toast.ok { border-left-color: var(--ok); }
+.toast.error { border-left-color: var(--danger); }
+.toast details { margin-top: 4px; color: var(--text-muted); font-size: 12px; white-space: pre-wrap; }
+
+/* ---------- modal / drawer ---------- */
+.overlay {
+  position: fixed; inset: 0; background: var(--overlay);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--bg-raised); border: 1px solid var(--card-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); width: min(460px, 92vw); max-height: min(85vh, 720px);
+  display: flex; flex-direction: column;
+}
+.modal.wide { width: min(600px, 94vw); }
+.modal > header { display: flex; align-items: center; gap: var(--gap-2); padding: 14px var(--gap-4) 10px; }
+.modal > header h3 { margin: 0; font-size: 14.5px; flex: 1; }
+.modal .mbody { padding: 2px var(--gap-4) var(--gap-3); overflow-y: auto; display: flex; flex-direction: column; gap: var(--gap-3); }
+.modal .mbody p { margin: 0; font-size: 13.5px; color: var(--text); }
+/* ConfirmModal's body wrapper (it exists to carry the aria-describedby id) re-declares
+   .mbody's column+gap so a multi-paragraph body spaces as it did before the wrapper. */
+.modal .mbodygroup { display: flex; flex-direction: column; gap: var(--gap-3); }
+.modal .modalactions { display: flex; justify-content: flex-end; gap: var(--gap-2); padding: var(--gap-3) var(--gap-4); background: var(--bg-inset); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+@media (prefers-reduced-motion: no-preference) {
+  .overlay { animation: fade-in 0.12s ease-out; }
+  .modal { animation: modal-in 0.15s ease-out; }
+  @keyframes fade-in { from { opacity: 0; } }
+  @keyframes modal-in { from { opacity: 0; transform: scale(0.97) translateY(4px); } }
+}
+
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 94vw);
+  background: var(--bg-raised); border-left: 1px solid var(--card-border);
+  box-shadow: var(--shadow-lg); z-index: 55; display: flex; flex-direction: column;
+}
+.drawer > header { display: flex; align-items: center; gap: var(--gap-2); padding: var(--gap-3) var(--gap-4); border-bottom: 1px solid var(--hairline); font-weight: 600; font-size: 13.5px; }
+.drawer > .body { overflow: auto; padding: var(--gap-4); flex: 1; }
+.drawer pre { background: var(--bg-inset); border-radius: var(--radius); padding: var(--gap-3); overflow-x: auto; white-space: pre-wrap; }
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: drawer-in 0.18s ease-out; }
+  @keyframes drawer-in { from { transform: translateX(24px); opacity: 0; } }
+}
+
+/* WSL settings — sectioned definition rows */
+.setgroup { margin-bottom: var(--gap-4); }
+.setgroup:last-child { margin-bottom: 0; }
+.setgroup > h4 { margin: 0 0 2px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.setrow { display: flex; align-items: center; gap: var(--gap-4); padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+.setrow:last-child { border-bottom: none; }
+.setrow.gated { opacity: 0.55; }
+.setinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.setkey { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.setdesc { font-size: 11.5px; color: var(--text-muted); }
+.setctl { width: 250px; flex-shrink: 0; }
+.setctl input[type="text"], .setctl select { width: 100%; }
+@media (max-width: 700px) {
+  .setrow { flex-direction: column; align-items: stretch; gap: var(--gap-2); }
+  .setctl { width: 100%; }
+}
+
+/* Floating non-blocking window (container logs) */
+.floatwin {
+  position: fixed; z-index: 45;
+  width: min(700px, 92vw); height: min(480px, 80vh);
+  min-width: 360px; min-height: 200px;
+  resize: both; overflow: hidden;
+  background: var(--bg-raised); border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+}
+.floatwin > header {
+  display: flex; align-items: center; gap: var(--gap-2);
+  padding: 8px var(--gap-3); cursor: move; user-select: none;
+  border-bottom: 1px solid var(--hairline); flex-shrink: 0;
+}
+.floatwin .fwtitle { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.floatwin .fwbody { flex: 1; overflow: auto; padding: var(--gap-3); }
+.floatwin .fwbody pre { background: var(--bg-inset); border-radius: var(--radius); padding: var(--gap-3); margin: 0; }
+
+/* ---------- Volumes card (r9) ----------
+   A closing fact under a card's table, not a footnote to apologise with. Used by Volumes
+   to say where the bytes that have no size column actually live (probe P3 / DD1). */
+.cardnote {
+  margin: 0; padding: var(--gap-2) var(--gap-4) var(--gap-3);
+  font-size: 11.5px; line-height: 1.45; color: var(--text-muted);
+  border-top: 1px solid var(--hairline);
+}
+.cardnote strong { font-weight: 600; color: var(--text); }
+/* A row whose destructive action is in flight. Never optimistically removed: `volume rm`
+   can still fail ("in use"), and a row that vanishes and pops back has told a lie.
+   0.55 is this system's inert opacity (button:disabled, .setrow.gated). */
+tbody tr[aria-busy="true"] { opacity: 0.55; }
+
+.cmdpreview { background: var(--bg-inset); border-radius: var(--radius); padding: var(--gap-2) var(--gap-3); display: flex; gap: var(--gap-2); align-items: center; min-width: 0; }
+.cmdpreview code { flex: 1; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre, pre.mono { white-space: pre-wrap; overflow-wrap: anywhere; }
+.twocol { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--gap-3); align-items: start; }
+.pickrow { display: flex; gap: var(--gap-1); align-items: stretch; min-width: 0; }
+.pickrow input { flex: 1; min-width: 0; }
+.muted { color: var(--text-muted); }
+.stack-svc { border: 1px solid var(--hairline); border-radius: var(--radius); padding: var(--gap-3); display: flex; flex-direction: column; gap: var(--gap-2); }
+
+/* ---------- size control (MB/GB) ----------
+   One control, three grammars (r8 D1): the widget is identical everywhere; only the
+   serialized suffix differs. `.raw` is the DD2 escape hatch — a value with no exact
+   MB/GB form is shown verbatim and never rewritten. */
+.sizeinput { display: flex; align-items: center; gap: var(--gap-1); min-width: 0; flex-wrap: wrap; }
+.sizeinput > input[type="number"] { flex: 1 1 72px; min-width: 60px; }
+.sizeinput > select { flex: 0 0 auto; }
+.sizeinput .pickrow { flex: 1 1 100%; align-items: center; }
+/* The zero hint ("no swap file") sits inline beside the unit and stays on one line; the
+   raw-value hint is a sentence and must wrap inside its column, not overflow the card. */
+.sizeinput .sizehint { font-size: 11px; }
+.sizeinput:not(.raw) .sizehint { white-space: nowrap; }
+.sizeinput.raw .sizehint { flex: 1 1 100%; white-space: normal; line-height: 1.35; }
+/* .setctl forces width:100% on inputs/selects; the size control lays itself out. */
+.setctl .sizeinput select, .setctl .sizeinput input[type="number"] { width: auto; }
+
+/* ---------- Deploy → From file ---------- */
+.filepath { font-size: 12px; overflow-wrap: anywhere; }
+.sectionhead {
+  margin: 0 0 6px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.sectionhead.warn { color: var(--warn); margin: 0; }
+/* Every dropped key, itemised. Deliberately unbounded: a manifest whose secret silently
+   vanished is the exact failure this list exists to prevent, so it never truncates. */
+.warnbox {
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--warn-soft); border-left: 3px solid var(--warn);
+  border-radius: var(--radius); padding: var(--gap-3) var(--gap-4);
+}
+.warnlist { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.warnlist li { overflow-wrap: anywhere; }
+.rawyaml {
+  margin: 0; background: var(--bg-inset); border-radius: var(--radius);
+  padding: var(--gap-3); max-height: 420px; overflow: auto;
+}

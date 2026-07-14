@@ -1,0 +1,21 @@
+{
+  "exclude": ["frontend/dist", "frontend/node_modules"],
+  "tasks": {
+    "check": "deno check main.ts adapter/ server/ stacks/ system/ tray/ tests/ scripts/",
+    "check:web": "cd frontend && deno run -A npm:typescript/tsc -p tsconfig.json --noEmit",
+    "test": "deno test --allow-read --allow-env tests/",
+    "dev:server": "deno run --allow-net=127.0.0.1,hub.docker.com,registry-1.docker.io,auth.docker.io,ghcr.io,quay.io,mcr.microsoft.com \"--allow-run=wsl,wslc,reg,explorer,C:\\Program Files\\WSL\\wslc.exe\" --allow-read --allow-write --allow-env --allow-sys=osRelease server/headless.ts",
+    "dev:web": "cd frontend && deno install && deno run -A npm:vite",
+    "build:web": "cd frontend && deno install && deno run -A npm:vite build",
+    "compile": "deno compile --no-terminal --icon assets/logo.ico --include assets/logo.ico --include server/worker.ts --include tray/tray_worker.ts --include system/dialog_worker.ts --include frontend/dist --allow-ffi --allow-net \"--allow-run=wsl,wslc,reg,explorer,C:\\Program Files\\WSL\\wslc.exe\" --allow-read --allow-write --allow-env=WSL_UTF8,WSLC_GUI_TOKEN,WSLC_GUI_PORT,APPDATA,USERPROFILE,TEMP,TMP,LOCALAPPDATA,DENO_DIR,PLUGIN_URL --allow-sys=osRelease -o dist/wslc-gui.exe main.ts"
+  },
+  "imports": {
+    "@webview/webview": "jsr:@webview/webview@0.9.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/yaml": "jsr:@std/yaml@1"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "deno.worker", "dom"]
+  }
+}

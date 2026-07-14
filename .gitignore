@@ -1,0 +1,23 @@
+# --- local-only material, never published ---
+.playwright-mcp/
+DENO_KB/
+menu.md
+windows-wsl.pdf
+
+# Run state lives ONLY at the repo root (skillset-saves/). These patterns carry no
+# leading slash, so they also catch a copy accidentally created deeper in the tree
+# (e.g. app/skillset-saves/) — consolidate any such copy into the root one.
+skillset-saves/
+**/skillset-saves/
+
+# --- build artifacts (CI rebuilds these; exe is ~80 MB) ---
+app/dist/
+app/frontend/dist/
+app/frontend/node_modules/
+
+# --- editor / OS noise ---
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+*.log

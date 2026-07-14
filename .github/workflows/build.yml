@@ -1,0 +1,55 @@
+# Builds the Windows executable (x86_64-pc-windows-msvc — Deno's only Windows
+# compile target; there is no 32-bit option). The exe is uploaded as a workflow
+# artifact on every run, and attached to a GitHub Release when a v* tag is pushed.
+name: build
+
+on:
+  push:
+    branches: [master, main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write # release upload on tag builds; read-only is enough elsewhere
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck backend
+        run: deno task check
+
+      - name: Unit tests
+        run: deno task test
+
+      - name: Build frontend
+        run: deno task build:web
+
+      - name: Typecheck frontend
+        run: deno task check:web
+
+      - name: Compile Windows executable
+        run: deno task compile
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wslc-gui-windows-x86_64
+          path: app/dist/wslc-gui.exe
+          if-no-files-found: error
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/dist/wslc-gui.exe
