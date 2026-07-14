@@ -20,9 +20,13 @@ jobs:
       run:
         working-directory: app
     steps:
-      - uses: actions/checkout@v4
+      # Action majors are pinned for their Node runtime, not just their features:
+      # a JS action declares `runs.using` in its OWN action.yml, so the ONLY way to
+      # get off the deprecated Node 20 is to use a major whose author ships node24.
+      # checkout v5+, upload-artifact v6+ (v5 is still node20!), gh-release v3+.
+      - uses: actions/checkout@v7
 
-      - uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@v2 # already node24
         with:
           deno-version: v2.x
 
@@ -41,8 +45,10 @@ jobs:
       - name: Compile Windows executable
         run: deno task compile
 
+      # Left archiving ON: the bare exe is ~82 MB uncompressed and ~31 MB zipped,
+      # so letting the action zip it more than halves the download.
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wslc-gui-windows-x86_64
           path: app/dist/wslc-gui.exe
@@ -66,15 +72,19 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path dist\wslc-gui.exe, dist\dll -DestinationPath dist\wslc-gui-windows-x86_64-offline.zip -Force
 
+      # archive: false (upload-artifact v7+) uploads the single file AS-IS instead of
+      # wrapping it in another zip — so the download IS the release asset, with no
+      # zip-inside-a-zip to unpack first. It also ignores `name`: the artifact takes
+      # the file's own name, wslc-gui-windows-x86_64-offline.zip.
       - name: Upload offline zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: wslc-gui-windows-x86_64-offline
           path: app/dist/wslc-gui-windows-x86_64-offline.zip
+          archive: false
           if-no-files-found: error
 
       - name: Attach to release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: app/dist/wslc-gui.exe
